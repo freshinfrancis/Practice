@@ -1,4 +1,3 @@
-package com.assignment2;
 
 public interface Interlocking
 {
