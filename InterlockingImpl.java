@@ -67,23 +67,30 @@ public class InterlockingImpl implements Interlocking {
      * @param train The train to move.
      * @return true if the train is moved, false otherwise.
      */
+    // Updated moveTrain method with collision and deadlock handling
     private boolean moveTrain(Train train) {
-        if (isMovable(train)) {
-            Section currentSection = sections.get(train.getSection());
-            Section nextSection = sections.get(train.getNextSection());
+        Section currentSection = sections.get(train.getSection());
+        Section nextSection = sections.get(train.getNextSection());
 
+        if (isMovable(train)) {
             // Move the train out of the current section
             currentSection.moveTrain();
 
-            // Move the train into the next section, or remove it if it's at the end of the path
+            // Move the train into the next section, or mark it as waiting if it's at the destination
             if (nextSection != null) {
-                nextSection.addTrain(train); // Move the train to the next section
+                if (nextSection.isOccupied()) {
+                    // Queue the train if the next section is occupied
+                    nextSection.addToQueue(train);
+                    System.out.println("Train " + train.trainName + " is waiting for section " + nextSection.sectionID);
+                } else {
+                    nextSection.addTrain(train); // Move the train to the next section
+                    System.out.println("Train " + train.trainName + " moved to section " + nextSection.sectionID);
+                }
             } else {
                 // Train has reached its destination and should be removed
                 trains.remove(train.trainName);
                 System.out.println("Train: " + train.trainName + " has exited the system from section " + train.getSection());
             }
-
             return true; // Train was successfully moved
         }
         return false; // Train could not be moved
@@ -170,6 +177,7 @@ public class InterlockingImpl implements Interlocking {
 }
 
 // Represents a section of the track where a train can be located
+// Updated Section class to handle queueing trains
 class Section {
     int sectionID; // Unique ID for the section
     Train currentTrain; // The train currently in this section, if any
@@ -197,6 +205,11 @@ class Section {
         }
     }
 
+    // Adds a train to the queue directly
+    public void addToQueue(Train train) {
+        trainQueue.add(train);
+    }
+
     // Moves the current train out of this section and checks if another train is in the queue
     public void moveTrain() {
         if (this.currentTrain != null) {
@@ -206,6 +219,7 @@ class Section {
             // Check if there are any trains waiting in the queue
             if (!trainQueue.isEmpty()) {
                 currentTrain = trainQueue.poll(); // Move the next train from the queue into the section
+                System.out.println("Train " + currentTrain.trainName + " moved from queue to section " + sectionID);
             }
         }
     }
