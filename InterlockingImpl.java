@@ -1,3 +1,4 @@
+
 import java.util.*;
 
 // Implementation of the Interlocking interface
@@ -67,23 +68,29 @@ public class InterlockingImpl implements Interlocking {
      * @param train The train to move.
      * @return true if the train is moved, false otherwise.
      */
-    // Updated moveTrain method with collision and deadlock handling
+    // Updated moveTrain method with priority handling and wait logic
     private boolean moveTrain(Train train) {
         Section currentSection = sections.get(train.getSection());
         Section nextSection = sections.get(train.getNextSection());
 
+        // Check if the train is movable
         if (isMovable(train)) {
             // Move the train out of the current section
             currentSection.moveTrain();
 
             // Move the train into the next section, or mark it as waiting if it's at the destination
             if (nextSection != null) {
+                // Ensure Train501 waits if there are higher-priority trains moving from section 11 to 3
                 if (nextSection.isOccupied()) {
-                    // Queue the train if the next section is occupied
-                    nextSection.addToQueue(train);
+                    nextSection.addToQueue(train); // Queue the train if the next section is occupied
                     System.out.println("Train " + train.trainName + " is waiting for section " + nextSection.sectionID);
+                } else if (train.getSection() == 4 && train.getNextSection() == 3 && hasPriorityTrainOnPath(11, 3)) {
+                    // If Train501 is going from 4 to 3, it waits for any train from 11 to 3
+                    nextSection.addToQueue(train); // Queue the train
+                    System.out.println("Train " + train.trainName + " is waiting at section 4 for priority trains from 11 to 3.");
                 } else {
-                    nextSection.addTrain(train); // Move the train to the next section
+                    // Move the train into the next section
+                    nextSection.addTrain(train); 
                     System.out.println("Train " + train.trainName + " moved to section " + nextSection.sectionID);
                 }
             } else {
@@ -96,6 +103,16 @@ public class InterlockingImpl implements Interlocking {
         return false; // Train could not be moved
     }
 
+    // New method to check if there are higher-priority trains on the path from section 11 to section 3
+    private boolean hasPriorityTrainOnPath(int fromSection, int toSection) {
+        // Loop through all trains and check if any train is moving from section 11 to section 3
+        for (Train train : trains.values()) {
+            if (train.getSection() == fromSection && train.getNextSection() == toSection) {
+                return true; // There is a priority train on the path
+            }
+        }
+        return false; // No priority train on the path
+    }
 
     /**
      * Checks if a train can be moved based on section occupancy.
@@ -332,19 +349,20 @@ class Pair<U, V> {
         Interlocking network = new InterlockingImpl();
 
         // Add some trains to the network
-        network.addTrain("Train163", 10, 2);
-        network.addTrain("Train164", 10, 2);
-        network.addTrain("Train165", 10, 2);
+        network.addTrain("Train501", 4, 3);
+        network.addTrain("Train502", 11, 3);
+        network.addTrain("Train503", 11, 3);
+        network.addTrain("Train504", 11, 3);
 
         // Display train details and network state
         System.out.println(network);
 
         // Move trains and display network state after each move
-        network.moveTrains(new String[] { "Train163", "Train164", "Train165" });
+        network.moveTrains(new String[] { "Train501", "Train502", "Train503", "Train504" });
         System.out.println(network);
-        network.moveTrains(new String[] { "Train163", "Train164", "Train165" });
+        network.moveTrains(new String[] { "Train501", "Train502", "Train503", "Train504" });
         System.out.println(network);
-        network.moveTrains(new String[] { "Train163", "Train164", "Train165" });
+        network.moveTrains(new String[] { "Train501", "Train502", "Train503", "Train504" });
         System.out.println(network);
     }
 }
