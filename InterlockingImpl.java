@@ -8,15 +8,7 @@ public class InterlockingImpl implements Interlocking {
     // A map of active trains in the network, with train names as keys
     private final Map<String, Train> trains;
 
-    // Constraints and priority rules for movements between sections
-    // Constraints restrict certain train movements based on occupancy
-    private final Map<Pair<Integer, Integer>, Set<Pair<Integer, Integer>>> constraints;
-    // Priority rules specify which train movements should take precedence
-    private final Map<Pair<Integer, Integer>, Set<Pair<Integer, Integer>>> priority;
-    // A set that stores all priority train movements
-    private final Set<Pair<Integer, Integer>> prioritySet;
-
-    // Constructor to initialize the sections, trains, constraints, and priority rules
+    // Constructor to initialize the sections, trains
     public InterlockingImpl() {
         // Initialize sections (track segments) numbered 1 through 11
         sections = new HashMap<>();
@@ -25,31 +17,6 @@ public class InterlockingImpl implements Interlocking {
         }
         // Initialize the train map
         trains = new HashMap<>();
-
-        // Initialize constraints between track sections
-        constraints = new HashMap<>(Map.ofEntries(
-            // These constraints specify which train movements cannot happen concurrently
-            Map.entry(Pair.of(4, 3), Set.of(Pair.of(3, 4))),
-            Map.entry(Pair.of(3, 4), Set.of(Pair.of(4, 3))),
-            Map.entry(Pair.of(3, 11), Set.of(Pair.of(11, 3), Pair.of(7, 3))),
-            Map.entry(Pair.of(11, 3), Set.of(Pair.of(3, 11), Pair.of(7, 11))),
-            Map.entry(Pair.of(1, 9), Set.of(Pair.of(9, 2))),
-            Map.entry(Pair.of(9, 2), Set.of(Pair.of(1, 9), Pair.of(5, 9)))
-        ));
-
-        // Initialize priority rules
-        priority = new HashMap<>(Map.ofEntries(
-            // These priority rules specify which movements have priority over others
-            Map.entry(Pair.of(3, 4), Set.of(Pair.of(1, 5), Pair.of(6, 2))),
-            Map.entry(Pair.of(4, 3), Set.of(Pair.of(1, 5), Pair.of(6, 2))),
-            Map.entry(Pair.of(9, 6), Set.of(Pair.of(5, 8), Pair.of(10, 6)))
-        ));
-
-        // Populate the priority set with all movements marked as having priority
-        prioritySet = new HashSet<>();
-        for (Set<Pair<Integer, Integer>> value : priority.values()) {
-            prioritySet.addAll(value);
-        }
     }
 
     /**
@@ -58,39 +25,20 @@ public class InterlockingImpl implements Interlocking {
      * @param entryTrackSection Starting section of the train.
      * @param destinationTrackSection Destination section of the train.
      * @throws IllegalArgumentException if train name is already in use or path doesn't exist.
-     * @throws IllegalStateException if constraints are violated by adding this train.
      */
     @Override
     public void addTrain(String trainName, int entryTrackSection, int destinationTrackSection)
-            throws IllegalArgumentException, IllegalStateException {
+            throws IllegalArgumentException {
         // Check if a train with this name already exists
         if (trains.containsKey(trainName)) {
             throw new IllegalArgumentException("Train " + trainName + " is already in service.");
         }
 
-        // Check if any constraints are violated by this new train
-        Pair<Integer, Integer> key = Pair.of(entryTrackSection, destinationTrackSection);
-        Set<Pair<Integer, Integer>> value = constraints.get(key);
-        if (value != null) {
-            for (Pair<Integer, Integer> c : value) {
-                Section constraintSection = sections.get(c.first);
-                int targetSection = c.second;
-                // Check if the constrained section is occupied by a train headed for the same target
-                if (constraintSection.currentTrain != null && 
-                    constraintSection.currentTrain.getDestination() == targetSection) {
-                    throw new IllegalStateException("Constraint not met: trying to add a train heading for " +
-                            destinationTrackSection + " from " + entryTrackSection + ", but a train heading for "
-                            + targetSection + " is on " + c.first);
-                }
-            }
-        }
-
-        // If all checks pass, add the train to the system
+        // Add the train to the system
         Train newTrain = new Train(trainName, entryTrackSection, destinationTrackSection);
         sections.get(entryTrackSection).addTrain(newTrain); // Place the train in the entry section
         trains.put(trainName, newTrain); // Register the train in the map
     }
-
 
     /**
      * Moves the listed trains to the next track section.
@@ -101,28 +49,11 @@ public class InterlockingImpl implements Interlocking {
     @Override
     public int moveTrains(String[] trainNames) throws IllegalArgumentException {
         int count = 0; // Counter for successful moves
-        List<String> priorityNames = new ArrayList<>();
-        List<String> nonPriorityNames = new ArrayList<>();
 
-        // First pass: check exceptions and separate priority from non-priority trains
         for (String name : trainNames) {
             if (!trains.containsKey(name)) {
                 throw new IllegalArgumentException("Train " + name + " does not exist or is no longer in the rail corridor.");
             }
-            Train train = trains.get(name);
-            Pair<Integer, Integer> key = Pair.of(train.getSection(), train.getNextSection());
-            // Check if the train movement is a priority movement
-            if (prioritySet.contains(key)) {
-                priorityNames.add(name);
-            } else {
-                nonPriorityNames.add(name);
-            }
-        }
-        // Prioritize trains in the movement order
-        priorityNames.addAll(nonPriorityNames);
-
-        // Second pass: actually move the trains
-        for (String name : priorityNames) {
             Train train = trains.get(name);
             boolean isMoved = moveTrain(train);
             if (isMoved) {
@@ -139,81 +70,50 @@ public class InterlockingImpl implements Interlocking {
      */
     private boolean moveTrain(Train train) {
         if (isMovable(train)) {
-            // Get current and next sections for the train
             Section currentSection = sections.get(train.getSection());
             Section nextSection = sections.get(train.getNextSection());
-    
+
             // Move the train out of the current section
             currentSection.moveTrain();
-    
-            // Move the train into the next section, or remove it if it's at the end of the path
+
+            // Move the train into the next section, or mark it as waiting if it's at the destination
             if (nextSection != null) {
                 nextSection.addTrain(train); // Move the train to the next section
-            } else {
-                // Train has reached its destination and exited the network
-                trains.remove(train.trainName);
+            } else if (!train.isWaiting()) {
+                // Mark the train as waiting at its final destination
+                train.setWaiting();
             }
-    
-            // After moving the train, free up the section for the next train in queue
-            if (!currentSection.trainQueue.isEmpty()) {
-                currentSection.moveTrain();  // Move the next train in the queue into the section
-            }
-    
+
             return true; // Train was successfully moved
         }
-        return false; // Train could not be moved
+        return false; // Train could not be moved (next section was occupied)
     }
-    
-    
 
     /**
-     * Checks if a train can be moved based on constraints and section occupancy.
+     * Checks if a train can be moved based on section occupancy.
      * @param train The train to check.
      * @return true if the train can be moved, false otherwise.
      */
     private boolean isMovable(Train train) {
         Section nextSection = sections.get(train.getNextSection());
-        Pair<Integer, Integer> key = Pair.of(train.getSection(), train.getNextSection());
-    
-        // If nextSection is the exit point, the train can move
+
+        // If the train is at its destination and is waiting, it cannot move further
+        if (train.isWaiting()) {
+            return false;
+        }
+
+        // If the next section is null (exit point), the train can move
         if (nextSection == null) {
             return true;
         }
-    
-        // If the next section is occupied or if there is a priority conflict, the train cannot move
-        if (nextSection.isOccupied() || hasPriorityTarget(key)) {
+
+        // If the next section is occupied, the train cannot move
+        if (nextSection.isOccupied()) {
             return false;
         }
-    
+
         return true; // Train can move
     }
-    
-    
-
-    /**
-     * Checks if a higher priority train is present, blocking the movement.
-     * @param key The current movement key (current section -> next section).
-     * @return true if a priority conflict exists, false otherwise.
-     */
-    private boolean hasPriorityTarget(Pair<Integer, Integer> key) {
-        Set<Pair<Integer, Integer>> priorityTargets = priority.get(key);
-        if (priorityTargets == null) {
-            return false;
-        }
-        // Check if any priority trains are blocking the movement
-        for (Pair<Integer, Integer> target : priorityTargets) {
-            Section section = sections.get(target.first);
-            int targetDestination = target.second;
-            // Use currentTrain instead of train
-            if (section.currentTrain != null) {
-                if (section.currentTrain.getNextSection() == targetDestination) {
-                    return true; // A priority train is blocking the movement
-                }
-            }
-        }
-        return false; // No priority conflict
-    }
-    
 
     /**
      * Returns the name of the train occupying the given section.
@@ -297,7 +197,6 @@ class Section {
     }
 
     // Moves the current train out of this section and checks if another train is in the queue
-    // Moves the current train out of this section and checks if another train is in the queue
     public void moveTrain() {
         if (this.currentTrain != null) {
             this.currentTrain.move(); // Move the train to the next section
@@ -310,17 +209,14 @@ class Section {
         }
     }
 
-
     // Gets the name of the train in this section, or null if none
     public String getTrainName() {
         return currentTrain != null ? currentTrain.trainName : null;
     }
 }
 
-
 // Represents a train in the network
 class Train {
-    // Static map defining all possible paths between track sections
     public static final Map<Pair<Integer, Integer>, List<Integer>> allPaths = Map.ofEntries(
         Map.entry(Pair.of(1, 8), List.of(1, 5, 8)),
         Map.entry(Pair.of(1, 9), List.of(1, 5, 9)),
@@ -332,53 +228,56 @@ class Train {
         Map.entry(Pair.of(11, 3), List.of(11, 7, 3))
     );
 
-    public final String trainName; // Unique name for the train
-    private final int start; // Starting section of the train
-    private final int end; // Destination section of the train
-    private int journeyIndex; // Index tracking the train's position on its path
+    public final String trainName;
+    private final int start;
+    private final int end;
+    private int journeyIndex;
+    private boolean isWaiting; // Indicates whether the train is waiting at its destination
 
     public Train(String trainName, int start, int end) throws IllegalArgumentException {
-        // Ensure the start and end sections are connected by a valid path
         if (!allPaths.containsKey(Pair.of(start, end))) {
             throw new IllegalArgumentException("No path exists between " + start + " and " + end);
         }
         this.trainName = trainName;
         this.start = start;
         this.end = end;
-        this.journeyIndex = 0; // Start at the beginning of the journey
+        this.journeyIndex = 0;
+        this.isWaiting = false;
     }
 
-    // Returns the full path the train will follow
     public List<Integer> getPath() {
         return allPaths.get(Pair.of(this.start, this.end));
     }
 
-    // Checks if the train is still in service (hasn't completed its journey)
     public boolean isInService() {
         return journeyIndex < getPath().size();
     }
 
-    // Gets the current section the train is in
-    public int getSection() {
-        return isInService() ? getPath().get(journeyIndex) : -1;
+    public void setWaiting() {
+        isWaiting = true;
     }
 
-    // Gets the next section the train will move to
+    public boolean isWaiting() {
+        return isWaiting;
+    }
+
+    public int getSection() {
+        return isInService() ? getPath().get(journeyIndex) : end;
+    }
+
     public int getNextSection() {
         return (journeyIndex + 1) < getPath().size() ? getPath().get(journeyIndex + 1) : -1;
     }
 
-    // Gets the final destination section of the train
     public int getDestination() {
         return end;
     }
 
-    // Moves the train to the next section in its path
     public void move() {
         if (isInService()) {
-            journeyIndex++; // Move to the next section
+            journeyIndex++;
         } else {
-            throw new IllegalArgumentException("Trying to move a train not in service.");
+            setWaiting();
         }
     }
 }
@@ -412,32 +311,25 @@ class Pair<U, V> {
     public int hashCode() {
         return 31 * first.hashCode() + second.hashCode();
     }
-    
-    
+
     public static void main(String[] args) {
         // Create a new interlocking network
         Interlocking network = new InterlockingImpl();
-        
+
         // Add some trains to the network
-        network.addTrain("Train163",10,2);
+        network.addTrain("Train163", 10, 2);
         network.addTrain("Train164", 10, 2);
         network.addTrain("Train165", 10, 2);
-        //network.addTrain("t423", 11, 3);
-        //network.addTrain("t424", 11, 3);
-
-
 
         // Display train details and network state
         System.out.println(network);
 
         // Move trains and display network state after each move
-        network.moveTrains(new String[]{"Train163","Train164","Train165"});
+        network.moveTrains(new String[] { "Train163", "Train164", "Train165" });
         System.out.println(network);
-        network.moveTrains(new String[]{"Train163","Train164","Train165"});
+        network.moveTrains(new String[] { "Train163", "Train164", "Train165" });
         System.out.println(network);
-        network.moveTrains(new String[]{"Train163","Train164","Train165"});
+        network.moveTrains(new String[] { "Train163", "Train164", "Train165" });
         System.out.println(network);
     }
 }
-
-
