@@ -1,4 +1,3 @@
-
 import java.util.*;
 
 // Implementation of the Interlocking interface
@@ -63,7 +62,7 @@ public class InterlockingImpl implements Interlocking {
         return count; // Return the number of successful moves
     }
 
-    /**
+        /**
      * Moves a single train if allowed.
      * @param train The train to move.
      * @return true if the train is moved, false otherwise.
@@ -76,18 +75,20 @@ public class InterlockingImpl implements Interlocking {
             // Move the train out of the current section
             currentSection.moveTrain();
 
-            // Move the train into the next section, or mark it as waiting if it's at the destination
+            // Move the train into the next section, or remove it if it's at the end of the path
             if (nextSection != null) {
                 nextSection.addTrain(train); // Move the train to the next section
-            } else if (!train.isWaiting()) {
-                // Mark the train as waiting at its final destination
-                train.setWaiting();
+            } else {
+                // Train has reached its destination and should be removed
+                trains.remove(train.trainName);
+                System.out.println("Train: " + train.trainName + " has exited the system from section " + train.getSection());
             }
 
             return true; // Train was successfully moved
         }
-        return false; // Train could not be moved (next section was occupied)
+        return false; // Train could not be moved
     }
+
 
     /**
      * Checks if a train can be moved based on section occupancy.
