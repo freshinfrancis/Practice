@@ -331,31 +331,4 @@ class Pair<U, V> {
     }
 }
 
-interface Interlocking {
-    void addTrain(String trainName, int entryTrackSection, int destinationTrackSection) throws IllegalArgumentException, IllegalStateException;
-    int moveTrains(String[] trainNames) throws IllegalArgumentException;
-    String getSection(int trackSection) throws IllegalArgumentException;
-    int getTrain(String trainName) throws IllegalArgumentException;
-}
 
-public class Main {
-    public static void main(String[] args) {
-        Interlocking network = new InterlockingImpl();
-
-        try {
-            network.addTrain("t18", 1, 8);
-            network.addTrain("t102", 10, 2);
-            network.addTrain("t34", 3, 4);
-
-            System.out.println(network);
-            network.moveTrains(new String[]{"t18", "t34", "t102"});
-            System.out.println(network);
-            network.moveTrains(new String[]{"t18", "t34", "t102"});
-            System.out.println(network);
-            network.moveTrains(new String[]{"t18", "t34", "t102"});
-            System.out.println(network);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            System.err.println(e.getMessage());
-        }
-    }
-}
