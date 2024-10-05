@@ -1,3 +1,4 @@
+
 import java.util.*;
 
 // Implementation of the Interlocking interface
@@ -137,18 +138,17 @@ public class InterlockingImpl implements Interlocking {
      * @return true if the train is moved, false otherwise.
      */
     private boolean moveTrain(Train train) {
-        // Check if the train can be moved
         if (isMovable(train)) {
             // Get current and next sections for the train
             Section currentSection = sections.get(train.getSection());
             Section nextSection = sections.get(train.getNextSection());
-
+    
             // Move the train out of the current section
             currentSection.moveTrain();
-
+    
             // Move the train into the next section, or remove it if it's at the end of the path
             if (nextSection != null) {
-                nextSection.addTrain(train);
+                nextSection.addTrain(train); // Move the train to the next section
             } else {
                 // Train has reached its destination and exited the network
                 trains.remove(train.trainName);
@@ -157,6 +157,7 @@ public class InterlockingImpl implements Interlocking {
         }
         return false; // Train could not be moved
     }
+    
 
     /**
      * Checks if a train can be moved based on constraints and section occupancy.
@@ -167,17 +168,19 @@ public class InterlockingImpl implements Interlocking {
         Section nextSection = sections.get(train.getNextSection());
         Pair<Integer, Integer> key = Pair.of(train.getSection(), train.getNextSection());
     
-        // If nextSection is the exit point
+        // If nextSection is the exit point, the train can move
         if (nextSection == null) {
             return true;
         }
     
-        // If nextSection is occupied or if a priority target is present
+        // If the next section is occupied or if there is a priority conflict, the train cannot move
         if (nextSection.isOccupied() || hasPriorityTarget(key)) {
             return false;
         }
-        return true;
+    
+        return true; // Train can move
     }
+    
 
     /**
      * Checks if a higher priority train is present, blocking the movement.
@@ -290,13 +293,14 @@ class Section {
         if (this.currentTrain != null) {
             this.currentTrain.move(); // Move the train to the next section
             this.currentTrain = null; // Empty this section
-
+    
             // Check if there are any trains waiting in the queue
             if (!trainQueue.isEmpty()) {
                 currentTrain = trainQueue.poll(); // Move the next train from the queue into the section
             }
         }
     }
+    
 
     // Gets the name of the train in this section, or null if none
     public String getTrainName() {
@@ -406,7 +410,7 @@ class Pair<U, V> {
         Interlocking network = new InterlockingImpl();
         
         // Add some trains to the network
-        network.addTrain("t420",1,8);
+        network.addTrain("t420",4,3);
         network.addTrain("t421", 1, 9);
         network.addTrain("t422", 10, 2);
         network.addTrain("t423", 11, 3);
@@ -415,8 +419,6 @@ class Pair<U, V> {
 
 
         // Display train details and network state
-        System.out.println(network.getTrain("t420"));
-        System.out.println(network.getSection(1));
         System.out.println(network);
 
         // Move trains and display network state after each move
@@ -428,3 +430,5 @@ class Pair<U, V> {
         System.out.println(network);
     }
 }
+
+
