@@ -76,10 +76,10 @@ public class InterlockingImpl implements Interlocking {
         // Loop through all trains and check if any train is moving from section 'fromSection' to 'toSection'
         for (Train train : trains.values()) {
             if (train.getSection() == fromSection && train.getNextSection() == toSection) {
-                return true; // A priority train exists on the path
+                return false; // A priority train exists on the path
             }
         }
-        return false; // No priority train on the path
+        return true; // No priority train on the path
     }
 
     private boolean isMovable(Train train) {
