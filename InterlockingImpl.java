@@ -166,17 +166,17 @@ public class InterlockingImpl implements Interlocking {
     private boolean isMovable(Train train) {
         Section nextSection = sections.get(train.getNextSection());
         Pair<Integer, Integer> key = Pair.of(train.getSection(), train.getNextSection());
-
-        // If the next section is the exit point, the train can move
+    
+        // If nextSection is the exit point
         if (nextSection == null) {
             return true;
         }
-
-        // If the next section is occupied or there is a priority conflict, the train cannot move
+    
+        // If nextSection is occupied or if a priority target is present
         if (nextSection.isOccupied() || hasPriorityTarget(key)) {
             return false;
         }
-        return true; // Train can move
+        return true;
     }
 
     /**
@@ -193,6 +193,7 @@ public class InterlockingImpl implements Interlocking {
         for (Pair<Integer, Integer> target : priorityTargets) {
             Section section = sections.get(target.first);
             int targetDestination = target.second;
+            // Use currentTrain instead of train
             if (section.currentTrain != null) {
                 if (section.currentTrain.getNextSection() == targetDestination) {
                     return true; // A priority train is blocking the movement
@@ -256,7 +257,6 @@ public class InterlockingImpl implements Interlocking {
     }
 }
 
-// Represents a section of the track where a train can be located
 // Represents a section of the track where a train can be located
 class Section {
     int sectionID; // Unique ID for the section
@@ -410,7 +410,7 @@ class Pair<U, V> {
         network.addTrain("t421", 1, 9);
         network.addTrain("t422", 10, 2);
         network.addTrain("t423", 11, 3);
-        //network.addTrain("t424", 11, 3);
+        network.addTrain("t424", 11, 3);
 
 
 
@@ -420,11 +420,11 @@ class Pair<U, V> {
         System.out.println(network);
 
         // Move trains and display network state after each move
-        network.moveTrains(new String[]{"t420","t421","t422","t423"});
+        network.moveTrains(new String[]{"t420","t421","t422","t423","t424"});
         System.out.println(network);
-        network.moveTrains(new String[]{"t420","t421","t422","t423"});
+        network.moveTrains(new String[]{"t420","t421","t422","t423","t424"});
         System.out.println(network);
-        network.moveTrains(new String[]{"t420","t421","t422","t423"});
+        network.moveTrains(new String[]{"t420","t421","t422","t423","t424"});
         System.out.println(network);
     }
 }
