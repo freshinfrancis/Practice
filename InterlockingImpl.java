@@ -244,7 +244,6 @@ class Section {
     }
 }
 
-
 class Train {
     // All possible paths in the network
     public static final Map<Pair<Integer, Integer>, List<Integer>> allPaths = Map.ofEntries(
@@ -302,7 +301,6 @@ class Train {
     }
 }
 
-
 class Pair<U, V> {
     public final U first;
     public final V second;
@@ -331,7 +329,16 @@ class Pair<U, V> {
     public int hashCode() {
         return 31 * first.hashCode() + second.hashCode();
     }
+}
 
+interface Interlocking {
+    void addTrain(String trainName, int entryTrackSection, int destinationTrackSection) throws IllegalArgumentException, IllegalStateException;
+    int moveTrains(String[] trainNames) throws IllegalArgumentException;
+    String getSection(int trackSection) throws IllegalArgumentException;
+    int getTrain(String trainName) throws IllegalArgumentException;
+}
+
+public class Main {
     public static void main(String[] args) {
         Interlocking network = new InterlockingImpl();
 
