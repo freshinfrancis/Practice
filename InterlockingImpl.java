@@ -1,3 +1,4 @@
+package com.assignment2;
 
 import java.util.*;
 
@@ -153,10 +154,17 @@ public class InterlockingImpl implements Interlocking {
                 // Train has reached its destination and exited the network
                 trains.remove(train.trainName);
             }
+    
+            // After moving the train, free up the section for the next train in queue
+            if (!currentSection.trainQueue.isEmpty()) {
+                currentSection.moveTrain();  // Move the next train in the queue into the section
+            }
+    
             return true; // Train was successfully moved
         }
         return false; // Train could not be moved
     }
+    
     
 
     /**
@@ -180,6 +188,7 @@ public class InterlockingImpl implements Interlocking {
     
         return true; // Train can move
     }
+    
     
 
     /**
@@ -289,18 +298,19 @@ class Section {
     }
 
     // Moves the current train out of this section and checks if another train is in the queue
+    // Moves the current train out of this section and checks if another train is in the queue
     public void moveTrain() {
         if (this.currentTrain != null) {
             this.currentTrain.move(); // Move the train to the next section
             this.currentTrain = null; // Empty this section
-    
+
             // Check if there are any trains waiting in the queue
             if (!trainQueue.isEmpty()) {
                 currentTrain = trainQueue.poll(); // Move the next train from the queue into the section
             }
         }
     }
-    
+
 
     // Gets the name of the train in this section, or null if none
     public String getTrainName() {
@@ -410,11 +420,11 @@ class Pair<U, V> {
         Interlocking network = new InterlockingImpl();
         
         // Add some trains to the network
-        network.addTrain("t420",4,3);
-        network.addTrain("t421", 1, 9);
-        network.addTrain("t422", 10, 2);
-        network.addTrain("t423", 11, 3);
-        network.addTrain("t424", 11, 3);
+        network.addTrain("Train163",10,2);
+        network.addTrain("Train164", 10, 2);
+        network.addTrain("Train165", 10, 2);
+        //network.addTrain("t423", 11, 3);
+        //network.addTrain("t424", 11, 3);
 
 
 
@@ -422,11 +432,11 @@ class Pair<U, V> {
         System.out.println(network);
 
         // Move trains and display network state after each move
-        network.moveTrains(new String[]{"t420","t421","t422","t423","t424"});
+        network.moveTrains(new String[]{"Train163","Train164","Train165"});
         System.out.println(network);
-        network.moveTrains(new String[]{"t420","t421","t422","t423","t424"});
+        network.moveTrains(new String[]{"Train163","Train164","Train165"});
         System.out.println(network);
-        network.moveTrains(new String[]{"t420","t421","t422","t423","t424"});
+        network.moveTrains(new String[]{"Train163","Train164","Train165"});
         System.out.println(network);
     }
 }
