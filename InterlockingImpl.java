@@ -1,3 +1,4 @@
+
 import java.util.*;
 
 // Implementation of the Interlocking interface
@@ -48,7 +49,7 @@ public class InterlockingImpl implements Interlocking {
         // Special case: Train501 (from 4 to 3) must wait for all trains from 11 to 3
         if (train.getSection() == 4 && train.getNextSection() == 3 && hasPriorityTrainOnPath(11, 3)) {
             System.out.println("Train " + train.trainName + " is waiting at section 4 for priority trains from 11 to 3.");
-            return false; // Do not move Train501 yet
+            return true; // Do not move Train501 yet
         }
 
         // Check if train can move
