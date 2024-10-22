@@ -1,4 +1,3 @@
-package com.frp.app;
 
 import javax.swing.*;
 import java.awt.*;
