@@ -1,4 +1,3 @@
-package com.frp.app;
 
 import nz.sodium.*;
 
