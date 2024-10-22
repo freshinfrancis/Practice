@@ -1,4 +1,3 @@
-package com.frp.app;
 
 /** 
  * Represents a single set of GpsCoordinates.
