@@ -1,4 +1,4 @@
-Running a Maven Project in Eclipse
+## Running a Maven Project in Eclipse
 Prerequisites
 Java Development Kit (JDK): Ensure you have JDK installed on your system. You can download it from Oracle's website or other JDK providers like AdoptOpenJDK.
 Eclipse IDE: Install Eclipse IDE for Java Developers from Eclipse Downloads. Make sure it includes support for Maven; most Java bundles include this by default.
@@ -38,20 +38,20 @@ You can also run Maven commands directly from the command line outside of Eclips
 
 bash
 Copy code
-# Navigate to the project directory
+#### Navigate to the project directory
 cd /path/to/your/project
 
-# Clean the project
+#### Clean the project
 mvn clean
 
-# Compile the project
+#### Compile the project
 mvn compile
 
-# Run tests
+#### Run tests
 mvn test
 
-# Package the project
+#### Package the project
 mvn package
 
-# Install the project to your local Maven repository
+#### Install the project to your local Maven repository
 mvn install
