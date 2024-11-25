@@ -69,8 +69,6 @@ Click Run.
 Command Line Usage
 You can also run Maven commands directly from the command line outside of Eclipse:
 
-bash
-Copy code
 #### Navigate to the project directory
 cd /path/to/your/project
 
@@ -88,3 +86,21 @@ mvn package
 
 #### Install the project to your local Maven repository
 mvn install
+
+Detailed logs of the simulation can be viewed in the terminal to understand the step-by-step execution of the Paxos protocol and also in the Ouputs uploaded in the folder.
+
+# References
+1] Chatgpt :: Utilized ChatGPT-4 for consultation on multiple queries including:
+Verification of grammar correctness and comments.
+coding and Debugging assistance for code.
+Maven configurations and established best practices in software development.
+
+2] Stack Overflow :: In the development of this project, Stack Overflow served as an essential resource for addressing specific programming challenges and troubleshooting errors encountered during implementation.
+
+3] Github :: Code samples and libraries hosted on GitHub were leveraged to adopt best practices and integrate reliable, community-vetted patterns into our application.
+
+4] Youtube :: YouTube was utilized for accessing detailed video tutorials and expert guidance that helped clarify complex programming concepts and implementation strategies.
+
+5] In-depth explanations and technical insights on the Paxos algorithm were sourced from Rutgers University's course materials, available at https://people.cs.rutgers.edu/~pxk/417/notes/paxos.html.
+
+6] Conceptual understanding and implementation details of the Paxos algorithm were enhanced by the articles available on Geeks for Geeks.
