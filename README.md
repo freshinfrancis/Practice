@@ -1,4 +1,37 @@
-## Running a Maven Project in Eclipse
+# a1942887
+
+## Paxos Council Election (Assignment 3)
+Project Overview
+This Java project simulates the Paxos consensus algorithm through a mock council election scenario. It demonstrates how multiple nodes (members) in a distributed system can agree on a single value, despite the presence of network delays, failures, and concurrent operations. This project is ideal for understanding the fundamental mechanics of the Paxos protocol in distributed computing.
+
+### Key Components and Their Roles
+
+##### PaxosElection.java
+
+Description: This is the main driver class for the simulation. It sets up the simulation environment, initializes all council members, and executes various test scenarios to demonstrate how the Paxos algorithm handles simultaneous proposals, immediate responses, and varied response scenarios including artificial delays and member failures.
+Functionality:
+Initializes member instances with unique identifiers and network ports.
+Simulates three primary test scenarios: simultaneous proposals, immediate unanimous responses, and responses with varied delays or failures.
+Manages the lifecycle of the simulation including the setup, execution of test cases, and orderly shutdown of member instances.
+
+##### Member.java
+
+Description: Represents a council member in the Paxos election. Each member can act as a proposer, acceptor, and learner, which are roles defined within the Paxos protocol to facilitate the consensus process.
+Functionality:
+Handles incoming network connections and messages related to the Paxos protocol phases: prepare, promise, accept request, and accepted.
+Maintains internal state to track the highest proposal numbers seen and accepted, as well as the value associated with those proposals.
+Manages network communications to send and receive Paxos-related messages to and from other members.
+Can simulate network delays and failures to test the robustness of the consensus process under adverse conditions.
+
+##### Message.java
+
+Description: Defines the structure of messages exchanged between members during the Paxos consensus process. Each message type corresponds to a step in the Paxos protocol.
+Functionality:
+Encapsulates data fields such as message type, proposal number, proposer ID, and the value being proposed or accepted.
+Provides serialization capabilities to facilitate easy transmission of messages over network sockets.
+
+# How to Run Project
+## Running Project in Eclipse
 Prerequisites
 Java Development Kit (JDK): Ensure you have JDK installed on your system. You can download it from Oracle's website or other JDK providers like AdoptOpenJDK.
 Eclipse IDE: Install Eclipse IDE for Java Developers from Eclipse Downloads. Make sure it includes support for Maven; most Java bundles include this by default.
