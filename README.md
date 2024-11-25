@@ -87,7 +87,9 @@ mvn package
 #### Install the project to your local Maven repository
 mvn install
 
-Detailed logs of the simulation can be viewed in the terminal to understand the step-by-step execution of the Paxos protocol and also in the Ouputs uploaded in the folder.
+Detailed logs of the simulation can be viewed in the terminal to understand the step-by-step execution of the Paxos protocol.
+
+For detailed review, the main method output screenshots and printouts from testing code are provided within the project directory. 
 
 # References
 1] Chatgpt :: Utilized ChatGPT-4 for consultation on multiple queries including:
